@@ -3,11 +3,18 @@ import { router as authRouter } from "./routes/user/auth";
 import { errorHandler } from "./middleware/error-handler";
 import { DB_URI } from "./util/env";
 import mongoose from "mongoose";
+import cors from "cors";
 import 'express-async-errors'; // prevents async error
 
 const PORT = 5000;
 const app = express();
+
 app.use(express.json());
+app.use(cors({
+    origin:'http://localhost:3000', 
+    credentials:true,            //access-control-allow-credentials:true
+    // optionSuccessStatus:200
+}))
 
 app.use("/user/auth/", authRouter);
 

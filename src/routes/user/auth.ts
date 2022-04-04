@@ -1,4 +1,4 @@
-import { Router } from "express";
+import e, { Router } from "express";
 import bcrypt from "bcrypt";
 import { body, validationResult } from "express-validator";
 import jwt from "jsonwebtoken";
@@ -8,6 +8,7 @@ import { AuthenticationError } from "../../errors/auth-error";
 import { User } from "../../models/user";
 import 'express-async-errors'; // prevents async error
 import { JWT_SECRET } from "../../util/env";
+import { isEmpty } from "../../util/isEmpty";
 const router = Router();
 
 router.post("/sign-up",
@@ -24,7 +25,7 @@ router.post("/sign-up",
             const { username, email, password } = req.body;
             let existingUser = await User.findOne({ email });
             if (existingUser) {
-                throw new BadRequestError("Email in use.");
+                throw new BadRequestError("Account exists.");
             } else {
                 let user = User.build({
                     username,
@@ -32,7 +33,9 @@ router.post("/sign-up",
                     password
                 });
                 await user.save();
-                res.status(201).send("Account created.");
+                res.status(201).send({
+                    success: true
+                });
             }
         }
     });
@@ -57,7 +60,24 @@ router.post("/sign-in", body("email").isEmail(),
             }, JWT_SECRET);
             res.send(token);
         }
-    })
+    });
+    
+router.post("/verify-token", async (req, res)=> {
+    const { token } = req.body;
+    try {
+        const result = jwt.verify(token, JWT_SECRET);
+        if(!isEmpty(result)){
+            res.send({
+                isValid : true
+            })
+        }
+    } catch(err) {
+        res.send({
+            isValid : false
+        })
+    }
+    
+})
 
 export {
     router
